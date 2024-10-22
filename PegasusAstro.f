@@ -1,25 +1,38 @@
 \ Use the serial port (COM) functionality of VFX Forth to communicate with a Pegasus Astro USB light box
-\ requires VFX32serial.f
+NEED serial
+NEED CommandStrings
+
+\ COM port number, to revise on the local machine
+	7 value Pegasus.COM 
 
 \ prepare an instance of a VFX Forth generic I/O driver
- serdev: sid_Pegasus
+	serdev: Pegasus.sid
 
-: add-lightbox ( com_port --)
-	9600 sid_Pegasus ( com_port baud) open-serial
+: add-lightbox ( --)
+	Pegasus.com 9600 sid_Pegasus ( com_port baud) open-serial
 ;
 
 : remove-lightbox
-	sid_Pegasus close-serial
+	Pegasus.sid close-serial
 ;
 
- create Pegasus_protocol_version
- 'V' c, 13 c,
+ create Pegasus.command
+ 16 allot
+ \ protocol string
+ 
+: lightbox-on ( --)
+ 	<< 'E' | ':' | '1' | 0x0d | >>
+	( addr 4) Pegasus.sid ( addr n sid) write-gio ( ior) ABORT" Failed to write Pegasus COM port"
+;
 
- create Pegasus_protocol_enable
- 'E' c, ':' c, '1' c, 13 c,
+: lightbox-off ( --)
+ 	<< 'E' | ':' | '0' | 0x0d | >>
+	( addr 4) Pegasus.sid ( addr n sid) write-gio ( ior) ABORT" Failed to write Pegasus COM port"
+;
 
- create Pegasus_protocol_disable
- 'E' c, ':' c, '0' c, 13 c,
-	
- create Pegasus_protocol_brightness
- 'L' c, ':' c,'0' c, '0' c, '0' c, 13 c,
+: ->lighbox.intensity ( n --)	
+\ n is the intensity percentage 0 <= n <= 100
+	100 - ( dark%) 235 * 100 / 20 + ( darkness in range 20-255)
+	<< 'L' | ':' | (.) ..| 0x0d | >>
+	( addr u) Pegasus.sid ( addr n sid) write-gio ( ior) ABORT" Failed to write Pegasus COM port"
+;
