@@ -54,7 +54,6 @@ NEED CommandStrings
 : lightbox-on ( --)
  	Pegasus.command << 'E' | ':' | '1' | 0x0a | >>
 	lightbox-tell
-
 ;
 : lightbox-off ( --)
  	Pegasus.command << 'E' | ':' | '0' | 0x0a | >>
@@ -70,6 +69,7 @@ NEED CommandStrings
 
 : lightbox.version ( -- caddr u)
 \ report the firmware version number
+	Pegasus.buffer lightbox-ask 2drop			\ collect and discard responses from prior commands
 	Pegasus.command << 'V' | 0x0a | >>
 	lightbox-tell
 	200 ms
