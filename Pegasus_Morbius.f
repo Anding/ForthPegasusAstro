@@ -1,6 +1,6 @@
-\ PC Bidmead has the KMTronic relay box on COM?
-\ this file local and manual for each rig 
-0 constant COM_PEG
+\ PC Morbius serial allocation:
+\ COM3 MGBox, COM4 KMTronic relay box, COM5 Pegasus Astro FlatMaster.
+5 constant COM_PEG
 
 : scan-lightboxes
 \ report connected relay devices - manual for each setup

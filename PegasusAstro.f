@@ -51,6 +51,15 @@ NEED CommandStrings
 		over - ( addr n)
 ;
 
+: lightbox-drain ( -- )
+\ Discard only bytes already waiting; unlike lightbox-ask, never wait.
+	BEGIN
+		Pegasus.sid key?-gio
+	WHILE
+		Pegasus.sid key-gio drop
+	REPEAT
+;
+
 : lightbox-on ( --)
  	Pegasus.command << 'E' | ':' | '1' | 0x0a | >>
 	lightbox-tell
@@ -60,8 +69,17 @@ NEED CommandStrings
 	lightbox-tell
 ;
 
+: with-lightbox { xt | ior -- }
+\ Run one operation with illumination on and guarantee an off command.
+	lightbox-on
+	xt catch -> ior
+	lightbox-off
+	ior throw
+;
+
 : ->lightbox.intensity ( n --)	
 \ n is the intensity percentage 0 <= n <= 100
+	dup 0 101 within 0= ABORT" Lightbox intensity must be 0 through 100"
 	100 swap - ( dark%) 235 * 100 / 20 + ( darkness in range 20-255)
 	Pegasus.command << 'L' | ':' | (.) ..| 0x0a | >>
 	lightbox-tell
@@ -69,7 +87,7 @@ NEED CommandStrings
 
 : lightbox.version ( -- caddr u)
 \ report the firmware version number
-	Pegasus.buffer lightbox-ask 2drop			\ collect and discard responses from prior commands
+	lightbox-drain
 	Pegasus.command << 'V' | 0x0a | >>
 	lightbox-tell
 	200 ms
