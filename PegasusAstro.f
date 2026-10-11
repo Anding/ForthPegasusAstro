@@ -3,9 +3,10 @@ include %idir%\..\ForthBase\libraries\libraries.f
 
 NEED serial
 NEED CommandStrings
+NEED ForthVT100
 
-\ COM port number, to revise on the local machine
-	5 value Pegasus.COM 
+\ COM port number supplied by the observing environment
+	0 value Pegasus.COM
 
 \ prepare an instance of a VFX Forth generic I/O driver
 	serdev: Pegasus.sid
@@ -16,6 +17,7 @@ NEED CommandStrings
 
 : add-lightbox ( --)
 \ open the serial port
+	Pegasus.COM 0= ABORT" Pegasus FlatMaster COM port is not configured"
 	Pegasus.com 9600 Pegasus.sid ( com_port baud) open-serial
 ;
 
@@ -92,4 +94,11 @@ NEED CommandStrings
 	lightbox-tell
 	200 ms
 	Pegasus.buffer lightbox-ask
+;
+
+: check-lightbox ( -- )
+\ report the connected light box state available without changing illumination
+	s" FlatMaster" panel{
+	s" Firmware" lightbox.version .field
+	}panel
 ;

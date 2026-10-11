@@ -9,13 +9,14 @@ COM4  KMTronic relay box
 COM5  Pegasus Astro FlatMaster
 ```
 
+The driver-level vocabulary remains available for direct engineering use.
 Attach and inspect without changing illumination:
 
 ```forth
 NEED ForthPegasusAstro
 5 -> Pegasus.COM
 add-lightbox
-lightbox.version type
+check-lightbox
 ```
 
 Control is explicit:
@@ -35,3 +36,10 @@ For an operation which must leave the panel off even when it throws:
 10 ->lightbox.intensity
 ' acquire-flats with-lightbox
 ```
+
+`with-lightbox` guarantees an off command after success or a Forth exception.
+
+AstroImagingInForth supplies the higher-level lifecycle. Its observatory
+environment sets `Pegasus.COM`, `lightbox.default.intensity`, and
+`lightbox-device`; `connect`, `check`, `configure`, and `disconnect` then
+manage the FlatMaster alongside the other enabled equipment.
