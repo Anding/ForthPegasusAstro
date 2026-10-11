@@ -1,4 +1,6 @@
 \ Use the serial port (COM) functionality of VFX Forth to communicate with a Pegasus Astro USB light box
+\ Maintenance: keep serial protocol words device-level; observatory lifecycle
+\ and exception-safe illumination policy belong to AstroImagingInForth.
 include %idir%\..\ForthBase\libraries\libraries.f
 
 NEED serial
