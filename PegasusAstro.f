@@ -15,18 +15,18 @@ NEED ForthVT100
 	256 buffer: Pegasus.buffer
 	 16 buffer: Pegasus.command
 
-: add-lightbox ( --)
+: add-lightbox ( -- )
 \ open the serial port
 	Pegasus.COM 0= ABORT" Pegasus FlatMaster COM port is not configured"
 	Pegasus.com 9600 Pegasus.sid ( com_port baud) open-serial
 ;
 
-: remove-lightbox
+: remove-lightbox ( -- )
 \ close the serial port
 	Pegasus.sid close-serial
 ;
  
-: lightbox-tell ( caddr u --)
+: lightbox-tell ( caddr u -- )
 \ send a command 
 	Pegasus.sid ( addr n sid) write-gio ( ior) ABORT" Failed to write Pegasus COM port"
 ;
@@ -62,11 +62,11 @@ NEED ForthVT100
 	REPEAT
 ;
 
-: lightbox-on ( --)
+: lightbox-on ( -- )
  	Pegasus.command << 'E' | ':' | '1' | 0x0a | >>
 	lightbox-tell
 ;
-: lightbox-off ( --)
+: lightbox-off ( -- )
  	Pegasus.command << 'E' | ':' | '0' | 0x0a | >>
 	lightbox-tell
 ;
@@ -79,7 +79,7 @@ NEED ForthVT100
 	ior throw
 ;
 
-: ->lightbox.intensity ( n --)	
+: ->lightbox.intensity ( n -- )
 \ n is the intensity percentage 0 <= n <= 100
 	dup 0 101 within 0= ABORT" Lightbox intensity must be 0 through 100"
 	100 swap - ( dark%) 235 * 100 / 20 + ( darkness in range 20-255)
@@ -87,7 +87,7 @@ NEED ForthVT100
 	lightbox-tell
 ;
 
-: lightbox.version ( -- caddr u)
+: lightbox.version ( -- caddr u )
 \ report the firmware version number
 	lightbox-drain
 	Pegasus.command << 'V' | 0x0a | >>

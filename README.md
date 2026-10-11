@@ -6,7 +6,7 @@ On Morbius the serial allocation is:
 ```text
 COM3  MGBox
 COM4  KMTronic relay box
-COM5  Pegasus Astro FlatMaster
+COM5  Reserved for the currently disconnected Pegasus Astro FlatMaster
 ```
 
 The driver-level vocabulary remains available for direct engineering use.
