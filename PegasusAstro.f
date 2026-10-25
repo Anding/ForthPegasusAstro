@@ -1,6 +1,6 @@
 \ Use the serial port (COM) functionality of VFX Forth to communicate with a Pegasus Astro USB light box
 \ Maintenance: keep serial protocol words device-level; observatory lifecycle
-\ and exception-safe illumination policy belong to AstroImagingInForth.
+\ and illumination policy belong to AstroImagingInForth.
 include %idir%\..\ForthBase\libraries\libraries.f
 
 NEED serial
@@ -19,7 +19,7 @@ NEED ForthVT100
 
 : add-lightbox ( -- )
 \ open the serial port
-	Pegasus.COM 0= ABORT" Pegasus FlatMaster COM port is not configured"
+	Pegasus.COM 0= if cr ." Pegasus FlatMaster COM port is not configured" cr exit then
 	Pegasus.com 9600 Pegasus.sid ( com_port baud) open-serial
 ;
 
@@ -30,29 +30,24 @@ NEED ForthVT100
  
 : lightbox-tell ( caddr u -- )
 \ send a command 
-	Pegasus.sid ( addr n sid) write-gio ( ior) ABORT" Failed to write Pegasus COM port"
+	Pegasus.sid write-gio .throw
 ;
 
-: lightbox-ask ( addr -- addr n)		\ factor this to serial.f
+: lightbox-ask { addr | cursor -- addr n }
 \ read from the lightbox.  non-blocking with brief hardware timeout
-	dup
-	10 BEGIN								\ timeout counter
-		Pegasus.sid key?-gio
-	0= WHILE
-		1- dup 0= ( ior) ABORT" Pegasus COM port has not responded after 1000 ms"
+	10 0 do
+		Pegasus.sid key?-gio if leave then
 		100 ms
-	REPEAT
-	drop
-	
-	BEGIN									\ read while characters are available
-		Pegasus.sid key?-gio
-	WHILE
-		Pegasus.sid ( addr addr' sid) key-gio ( addr addr c)
-		over c!
-		1+
-		1 ms								\ appropriate for 9600 baud
-	REPEAT
-		over - ( addr n)
+	loop
+	Pegasus.sid key?-gio 0= if
+		cr ." Pegasus COM port has not responded after 1000 ms" cr addr 0 exit
+	then
+	addr -> cursor
+	begin Pegasus.sid key?-gio while
+		Pegasus.sid key-gio cursor c! cursor 1+ -> cursor
+		1 ms
+	repeat
+	addr cursor addr -
 ;
 
 : lightbox-drain ( -- )
@@ -73,17 +68,19 @@ NEED ForthVT100
 	lightbox-tell
 ;
 
-: with-lightbox { xt | ior -- }
-\ Run one operation with illumination on and guarantee an off command.
-	lightbox-on
-	xt catch -> ior
+: with-lightbox { xt -- }
+\ Run one normally returning operation with illumination, then switch off.
+	Pegasus.command << 'E' | ':' | '1' | 0x0a | >>
+	Pegasus.sid write-gio ?dup if .throw exit then
+	xt execute
 	lightbox-off
-	ior throw
 ;
 
 : ->lightbox.intensity ( n -- )
 \ n is the intensity percentage 0 <= n <= 100
-	dup 0 101 within 0= ABORT" Lightbox intensity must be 0 through 100"
+	dup 0 101 within 0= if
+		drop cr ." Lightbox intensity must be 0 through 100" cr exit
+	then
 	100 swap - ( dark%) 235 * 100 / 20 + ( darkness in range 20-255)
 	Pegasus.command << 'L' | ':' | (.) ..| 0x0a | >>
 	lightbox-tell
@@ -93,7 +90,9 @@ NEED ForthVT100
 \ report the firmware version number
 	lightbox-drain
 	Pegasus.command << 'V' | 0x0a | >>
-	lightbox-tell
+	Pegasus.sid write-gio ?dup if
+		.throw Pegasus.buffer 0 exit
+	then
 	200 ms
 	Pegasus.buffer lightbox-ask
 ;

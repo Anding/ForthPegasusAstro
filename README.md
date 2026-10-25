@@ -29,7 +29,7 @@ remove-lightbox
 ```
 
 Intensity is expressed as an illumination percentage from 0 through 100.
-For an operation which must leave the panel off even when it throws:
+For a normally returning operation which should leave the panel off:
 
 ```forth
 : acquire-flats lightbox-flats ;
@@ -37,7 +37,14 @@ For an operation which must leave the panel off even when it throws:
 ' acquire-flats with-lightbox
 ```
 
-`with-lightbox` guarantees an off command after success or a Forth exception.
+`with-lightbox` sends an off command after the operation returns normally.
+It does not catch Forth exceptions. If switching on fails, it reports the
+error and skips the operation.
+
+Ordinary configuration, range, timeout and serial write failures report and
+return normally. A timed-out query returns its buffer with length zero.
+`PegasusAstro_errors_test.f` checks these paths using serial mocks only and
+never accesses hardware.
 
 AstroImagingInForth supplies the higher-level lifecycle. Its observatory
 environment sets `Pegasus.COM`, `lightbox.default.intensity`, and
