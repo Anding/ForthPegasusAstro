@@ -1,5 +1,10 @@
 # ForthPegasusAstro
 
+`pegasus.error.code` and `.timestamp` latch native write errors or -1 for an
+observed reply timeout. Timestamps are ForthBase UTC Unix epoch seconds.
+Success never clears them; only application idle policy acknowledges/recovers.
+No automatic recovery runs inside error reporting.
+
 `configure-lightbox` applies desired `lightbox.default.intensity` (10%)
 without turning illumination on. It is policy, not a hardware-state cache.
 Control of the Pegasus Astro Flatmaster in Forth

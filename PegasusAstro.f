@@ -6,6 +6,17 @@ include %idir%\..\ForthBase\libraries\libraries.f
 NEED serial
 NEED CommandStrings
 NEED ForthVT100
+NEED windows
+
+0 value pegasus.error.code       \ Native write error, or -1 for an observed reply timeout.
+0 value pegasus.error.timestamp  \ UTC Unix epoch seconds.
+
+: Pegasus.error! ( code -- )
+\ Retain the latest nonzero transport failure without clearing on success.
+    ?dup if
+        -> pegasus.error.code utc-epoch-seconds -> pegasus.error.timestamp
+    then
+;
 
 \ COM port number supplied by the observing environment
 	0 value Pegasus.COM
@@ -31,7 +42,7 @@ NEED ForthVT100
  
 : lightbox-tell ( caddr u -- )
 \ send a command 
-	Pegasus.sid write-gio .throw
+	Pegasus.sid write-gio dup Pegasus.error! .throw
 ;
 
 : lightbox-ask { addr | cursor -- addr n }
@@ -41,6 +52,7 @@ NEED ForthVT100
 		100 ms
 	loop
 	Pegasus.sid key?-gio 0= if
+        -1 Pegasus.error!
 		cr ." Pegasus COM port has not responded after 1000 ms" cr addr 0 exit
 	then
 	addr -> cursor
@@ -72,7 +84,7 @@ NEED ForthVT100
 : with-lightbox { xt -- }
 \ Run one normally returning operation with illumination, then switch off.
 	Pegasus.command << 'E' | ':' | '1' | 0x0a | >>
-	Pegasus.sid write-gio ?dup if .throw exit then
+	Pegasus.sid write-gio ?dup if dup Pegasus.error! .throw exit then
 	xt execute
 	lightbox-off
 ;
@@ -92,7 +104,7 @@ NEED ForthVT100
 	lightbox-drain
 	Pegasus.command << 'V' | 0x0a | >>
 	Pegasus.sid write-gio ?dup if
-		.throw Pegasus.buffer 0 exit
+		dup Pegasus.error! .throw Pegasus.buffer 0 exit
 	then
 	200 ms
 	Pegasus.buffer lightbox-ask
