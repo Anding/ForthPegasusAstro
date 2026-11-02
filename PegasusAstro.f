@@ -9,6 +9,7 @@ NEED ForthVT100
 
 \ COM port number supplied by the observing environment
 	0 value Pegasus.COM
+10 value lightbox.default.intensity \ Desired percentage; configure never turns on illumination.
 
 \ prepare an instance of a VFX Forth generic I/O driver
 	serdev: Pegasus.sid
@@ -102,4 +103,9 @@ NEED ForthVT100
 	s" FlatMaster" panel{
 	s" Firmware" lightbox.version .field
 	}panel
+;
+
+: configure-lightbox ( -- )
+\ Apply desired brightness without switching the panel on.
+    lightbox.default.intensity ->lightbox.intensity
 ;

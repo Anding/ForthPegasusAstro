@@ -1,4 +1,7 @@
 # ForthPegasusAstro
+
+`configure-lightbox` applies desired `lightbox.default.intensity` (10%)
+without turning illumination on. It is policy, not a hardware-state cache.
 Control of the Pegasus Astro Flatmaster in Forth
 
 On Morbius the serial allocation is:
